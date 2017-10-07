@@ -1,3 +1,5 @@
+// javac Test.java
+// java Test '[a, b, c, d, e, f, g]'
 public class Test {
   public static void main(String[] args) {
     ListLexer lexer = new ListLexer(args[0]);
