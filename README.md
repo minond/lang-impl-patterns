@@ -1,2 +1,1 @@
-# Language Impleentation Patterns
-## By Terence Parr
+# Language Impleentation Patterns By Terence Parr
