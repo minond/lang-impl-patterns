@@ -1,7 +1,7 @@
 package ll1rdl
 
 object Main {
-  def main(args: Array[String]) {
+  def main(args: Array[String]) = {
     val lexer = new ListLexer(args(0))
     var token: Token = null
 
