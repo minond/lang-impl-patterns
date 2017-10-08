@@ -16,14 +16,6 @@ abstract class Lexer(input: String) {
       c = input.charAt(p)
     }
   }
-
-  def matching(expecting: Char) = {
-    if (c == expecting) {
-      consume()
-    } else {
-      throw new Error(s"Expecting $expecting but found $c.")
-    }
-  }
 }
 
 object Lexer {
