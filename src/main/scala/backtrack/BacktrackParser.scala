@@ -21,13 +21,19 @@ class BacktrackParser(input: Lexer) extends Parser(input) {
     release()
 
     test match {
-      case Success(_) => true
-      case Failure(_) => false
+      case Success(_) =>
+        println("Speculation was correct")
+        true
+
+      case Failure(_) =>
+        println("Speculation was incorrect")
+        false
     }
   }
 
   def speculateStatAlt1() = {
     speculate(() => Try {
+      println("Speculating `list`")
       list()
       matching(Lexer.EOF_TYPE)
     })
@@ -35,24 +41,28 @@ class BacktrackParser(input: Lexer) extends Parser(input) {
 
   def speculateStatAlt2() = {
     speculate(() => Try {
+      println("Speculating `assign`")
       assign()
       matching(Lexer.EOF_TYPE)
     })
   }
 
   def assign(): Unit = {
+    println("Parsing `assign`")
     list()
     matching(LookaheadLexer.EQUALS)
     list()
   }
 
   def list(): Unit = {
+    println("Parsing `list`")
     matching(LookaheadLexer.LBRACK)
     elements()
     matching(LookaheadLexer.RBRACK)
   }
 
   def elements(): Unit = {
+    println("Parsing `elements`")
     element()
 
     while (LA(1) == LookaheadLexer.COMMA) {
@@ -62,6 +72,8 @@ class BacktrackParser(input: Lexer) extends Parser(input) {
   }
 
   def element() = {
+    println("Parsing `element`")
+
     (LA(1), LA(2)) match {
       case (LookaheadLexer.NAME, LookaheadLexer.EQUALS) =>
         matching(LookaheadLexer.NAME)
