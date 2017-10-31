@@ -27,7 +27,7 @@ class LookaheadLexer(input: String) extends Lexer(input) {
           return Token(LookaheadLexer.EQUALS, "=")
 
         case _ =>
-          if (isLetter()) {
+          if (isLetter() || isNumber()) {
             return Name()
           } else {
             throw new Error(s"Invalid character: $c")
@@ -40,6 +40,9 @@ class LookaheadLexer(input: String) extends Lexer(input) {
 
   def isLetter() =
     c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'
+
+  def isNumber() =
+    c >= '0' && c <= '9'
 
   def Ws() = {
     while (c == ' ' || c == '\t' || c == '\n' || c == '\r') {

@@ -1,8 +1,15 @@
 package memoizing
 
+import scala.collection.mutable.Map
 import scala.util.{Failure, Success, Try}
 
 class BacktrackParser(input: Lexer) extends Parser(input) {
+  var listMemo: Memo = Map[Int, Int]()
+
+  def clearMemo(): Unit = {
+    listMemo = Map[Int, Int]()
+  }
+
   def stat() = {
     if (speculateStatAlt1()) {
       list()
@@ -48,21 +55,46 @@ class BacktrackParser(input: Lexer) extends Parser(input) {
   }
 
   def assign(): Unit = {
-    println("Parsing `assign`")
+    println(s"Parsing `assign` at $p")
     list()
     matching(LookaheadLexer.EQUALS)
     list()
   }
 
-  def list(): Unit = {
-    println("Parsing `list`")
+  def _list(): Unit = {
+    println(s"Parsing `list` at $p")
     matching(LookaheadLexer.LBRACK)
     elements()
     matching(LookaheadLexer.RBRACK)
   }
 
+  def list(): Unit = {
+    var failed = false
+    var startIndex = p
+
+    if (isSpeculating() && alreadyParsedRule(listMemo)) {
+      return
+    }
+
+    try {
+      _list()
+    } catch {
+      case err: RecognitionException =>
+        failed = true
+        throw err
+
+      case err: Throwable =>
+        failed = true
+        throw err
+    } finally {
+      if (isSpeculating()) {
+        listMemo = memoize(listMemo, startIndex, failed)
+      }
+    }
+  }
+
   def elements(): Unit = {
-    println("Parsing `elements`")
+    println(s"Parsing `elements` at $p")
     element()
 
     while (LA(1) == LookaheadLexer.COMMA) {
@@ -72,7 +104,7 @@ class BacktrackParser(input: Lexer) extends Parser(input) {
   }
 
   def element() = {
-    println("Parsing `element`")
+    println(s"Parsing `element` at $p")
 
     (LA(1), LA(2)) match {
       case (LookaheadLexer.NAME, LookaheadLexer.EQUALS) =>
@@ -85,6 +117,10 @@ class BacktrackParser(input: Lexer) extends Parser(input) {
 
       case (LookaheadLexer.LBRACK, _) =>
         list()
+
+      case (LookaheadLexer.RBRACK, _) =>
+        println("Found empty list.")
+        throw new Error(s"Expecting name of list but found ${LT(1)}")
 
       case _ =>
         throw new Error(s"Expecting name of list but found ${LT(1)}")

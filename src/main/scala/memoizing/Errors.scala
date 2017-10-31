@@ -8,3 +8,6 @@ case class NoViableAltException(message: String)
 
 case class MismatchedTokenException(message: String)
   extends Exception(message)
+
+case class PreviousParseFailedException(message: String)
+  extends Exception(message)

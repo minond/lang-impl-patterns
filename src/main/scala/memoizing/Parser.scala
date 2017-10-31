@@ -1,6 +1,14 @@
 package memoizing
 
+import scala.collection.mutable.Map
+
+object Parser {
+  val FAILED = -1
+}
+
 abstract class Parser(input: Lexer) {
+  type Memo = Map[Int, Int]
+
   var markers = List[Int]()
   var lookahead = List[Token]()
 
@@ -8,12 +16,34 @@ abstract class Parser(input: Lexer) {
 
   sync(1)
 
+  def clearMemo(): Unit
+
+  def memoize(memo: Memo, index: Int, failed: Boolean): Memo = {
+    val value = if (failed) Parser.FAILED else p
+    memo + (index -> value)
+  }
+
+  def alreadyParsedRule(memo: Memo): Boolean = {
+    val ret = memo.getOrElse(p, return false)
+
+    println(s"Memoized computation at $p; Seeking to $ret (${lookahead(ret).text})")
+
+    if (ret == Parser.FAILED) {
+      throw PreviousParseFailedException(s"At index $p")
+    }
+
+    seek(ret)
+    return true
+  }
+
+
   def consume() = {
     p = p + 1
 
     if (p == lookahead.size && !isSpeculating()) {
       p = 0
       lookahead = List[Token]()
+      clearMemo()
     }
 
     sync(1)
