@@ -5,9 +5,11 @@ import scala.util.{Failure, Success, Try}
 
 class BacktrackParser(input: Lexer) extends Parser(input) {
   var listMemo: Memo = Map[Int, Int]()
+  var assignMemo: Memo = Map[Int, Int]()
 
   def clearMemo(): Unit = {
     listMemo = Map[Int, Int]()
+    assignMemo = Map[Int, Int]()
   }
 
   def stat() = {
@@ -54,11 +56,39 @@ class BacktrackParser(input: Lexer) extends Parser(input) {
     })
   }
 
-  def assign(): Unit = {
+  def _assign(): Unit = {
     println(s"Parsing `assign` at $p")
     list()
     matching(LookaheadLexer.EQUALS)
     list()
+  }
+
+  def assign(): Unit = {
+    var failed = false
+    var startIndex = p
+
+    if (isSpeculating() && alreadyParsedRule(assignMemo)) {
+      return
+    }
+
+    try {
+      _assign()
+    } catch {
+      case err: RecognitionException =>
+        failed = true
+        throw err
+
+      case err: Throwable =>
+        failed = true
+        throw err
+    } finally {
+      if (isSpeculating()) {
+        println(s"Storing result of `assign` memoization. Start: $startIndex, end: $p, failed: $failed")
+        assignMemo = memoize(assignMemo, startIndex, failed)
+      } else {
+        println("Not speculating so not storing `list` memoize.")
+      }
+    }
   }
 
   def _list(): Unit = {
@@ -88,7 +118,10 @@ class BacktrackParser(input: Lexer) extends Parser(input) {
         throw err
     } finally {
       if (isSpeculating()) {
+        println(s"Storing result of `list` memoization. Start: $startIndex, end: $p, failed: $failed")
         listMemo = memoize(listMemo, startIndex, failed)
+      } else {
+        println("Not speculating so not storing `list` memoize.")
       }
     }
   }
